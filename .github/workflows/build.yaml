@@ -1,0 +1,80 @@
+name: Build Windows
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: MSBuild (Release x64)
+    runs-on: windows-latest
+    
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}\vcpkg
+      BUILD_TYPE: Release
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Restore vcpkg Cache
+        id: cache-vcpkg
+        uses: actions/cache@v4
+        with:
+          path: vcpkg
+          key: ${{ runner.os }}-vcpkg-${{ hashFiles('CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-vcpkg-
+
+      - name: Install Dependencies (vcpkg)
+        shell: powershell
+        run: |
+          # 1. Clone vcpkg if not restored from cache
+          if (-not (Test-Path "vcpkg")) {
+            Write-Host "Cloning vcpkg..."
+            git clone https://github.com/microsoft/vcpkg.git
+          }
+          
+          # 2. Bootstrap vcpkg
+          Write-Host "Bootstrapping vcpkg..."
+          .\vcpkg\bootstrap-vcpkg.bat -disableMetrics
+          
+          # 3. Install Libraries
+          Write-Host "Installing OpenSSL and LZO..."
+          .\vcpkg\vcpkg install openssl:x64-windows lzo:x64-windows --triplet x64-windows
+          
+          # 4. Integrate (Ensures MSBuild can find libs globally if needed)
+          .\vcpkg\vcpkg integrate install
+
+      - name: Generate Project Files (CMake)
+        shell: powershell
+        run: |
+          # Configure CMake to use the vcpkg toolchain
+          # This automatically sets up INCLUDE and LIB paths for MSBuild
+          cmake -B build -S . -G "Visual Studio 17 2022" -A x64 `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake" `
+            -DVCPKG_TARGET_TRIPLET=x64-windows
+
+      - name: Build Solution (MSBuild)
+        shell: powershell
+        run: |
+          # Build the generated solution in Release mode
+          cmake --build build --config ${{ env.BUILD_TYPE }} --parallel
+
+      - name: Verify Build Artifact
+        shell: powershell
+        run: |
+          if (Test-Path "build\Release\openvpn.exe") {
+            Write-Host "Build Successful: build\Release\openvpn.exe found."
+          } else {
+            Write-Error "Build Failed: openvpn.exe not found."
+            exit 1
+          }
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openvpn-windows-release
+          path: build\Release\openvpn.exe

@@ -1,0 +1,10 @@
+﻿# CMakeLists.txt for XOR Scramble module
+# Include this in your main OpenVPN CMakeLists.txt
+
+set(SCRAMBLE_SOURCES
+    scramble.c
+    scramble.h
+)
+
+# Add to your main target:
+# target_sources(openvpn PRIVATE ${SCRAMBLE_SOURCES})

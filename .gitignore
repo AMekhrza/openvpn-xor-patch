@@ -1,0 +1,69 @@
+# --- Build & Output Directories ---
+build/
+Build_Output/
+Installer_Output/    # <-- new: ignore final installer output (setup.exe)
+out/
+Debug/
+Release/
+x64/
+x86/
+.vs/
+vcpkg_installed/
+
+# --- Driver & External Binaries ---
+drivers/             # <-- new: ignore bundled driver installers (e.g. tap-windows.exe)
+*.msi                # <-- new: ignore installer packages (.msi)
+
+# --- Visual Studio User Specific (Important for Privacy) ---
+*.vcxproj.user
+*.db
+*.opendb
+*.ipch
+
+# --- Compiled Binaries (General) ---
+*.dll
+*.exe
+# Exception: Allow binaries in the Distributable folder (ONLY if source code)
+!Distributable/*.dll
+!Distributable/*.exe
+
+# --- Configuration and Secrets (sensitive files) ---
+*.ovpn
+*.p12
+*.key
+*.csr
+*.pem
+# Exception for sample keys provided by the repo itself
+!sample/sample-keys/*.key
+!sample/sample-keys/*.pem
+!sample/sample-keys/*.p12
+!sample/sample-windows/*.ovpn
+!sample/sample-plugins/**/*.ovpn
+
+# --- Generated Configuration Files ---
+config-msvc-version.h
+version.sh
+
+# --- Temporary Files ---
+*.log
+*.tlog
+*.obj
+*.iobj
+*.aps
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.cache
+*.idb
+*.pdb
+*.ilk
+*.exp
+*.lib
+
+# --- System & Editors ---
+Thumbs.db
+Desktop.ini
+.DS_Store
+.vscode/
+.idea/
